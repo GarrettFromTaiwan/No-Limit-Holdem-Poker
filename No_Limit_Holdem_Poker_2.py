@@ -8,10 +8,10 @@ HP.dict_value = {13: 'A', 12: 'K', 11: 'Q', 10: 'J', 9: 'T', 8: '9',
 # Game parameters
 # HC: player hole cards
 # board: public cards at different stages F(flop-3), T(turn-1), R(river-1)
-HP.player_number = 1
+HP.player_number = 2
 HP.board_ori = {'F': [], 'T': [], 'R': [] }
-HP.player_HC_ori = { 1: [(4, 7), (4, 6)], 2: [], 3: [], 4: [], 5: [],
-                  6: [], 7: [], 8: [], 9: [], 10: [] }
+HP.player_HC_ori = { 1: [], 2: [], 3: [], 4: [],  5: [],
+                     6: [], 7: [], 8: [], 9: [], 10: [] }
 # Initialize card information
 HP.Initialization()
 
@@ -31,18 +31,19 @@ tic = time.time()
 while True:
     Run_new_game()
     player_hands = Get_Poker_hands('River')
-    for k, v in player_hands.items():
-        if v[0][0] >= 9:
-            cards = HP.player_HC[k]+HP.board['F']+HP.board['T']+HP.board['R']
+    ranked_PH = HP.Rank_player_hands(player_hands)
+    for k, v in ranked_PH.items():
+        if v[0][0] >=8:
+            cards = HP.Sort_HC(HP.player_HC[k])+HP.board['F']+HP.board['T']+HP.board['R']
             str_cards = '( '
             for card in cards:
                 str_cards += HP.dict_suit[card[0]] + HP.dict_value[card[1]] + ' '
             str_cards += ')'
-            print('{0: >8d},{1: >4d}, Cards: {2}, Hands: {3}'.format(count, rep, str_cards, v))
+            print('{0: >8d}.{1: >4d}: Cards: {2}  Player: {3}, Hands: {4}'.format(count, rep, str_cards, k, v))
             rep += 1
             break
     
-    if rep >= 101:
+    if rep >= 21:
         toc = time.time()
         print('Running time: {} seconds'.format(round(toc-tic, 3)))
         break

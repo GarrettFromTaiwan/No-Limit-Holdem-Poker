@@ -3,7 +3,6 @@ from collections import Counter
 
 def Initialization():
     global player_HC, board, poker_cards, shuffled_cards, num_fill_cards      
-    
     def Build_cards():
         # Return a deck of poker cards excluding specified cards
         def Build_deck():
@@ -12,7 +11,6 @@ def Initialization():
             # new_deck: set of 52 poker cards
             new_deck = set((suit, value) for suit in range(4, 0, -1) for value in range(13, 0, -1))
             return new_deck
-        
         def Specified_cards():
             global player_HC, board
             # SC: set of specified cards include every player's hole cards and community cards
@@ -25,24 +23,20 @@ def Initialization():
                 if v != False:
                     for i in v:
                         SC.add(i)
-            return SC
-        
+            return SC 
         set_52_cards = Build_deck()
         set_specified_cards = Specified_cards()
         # UC: a deck of unspecified cards
         UC = sorted(list(set_52_cards-set_specified_cards), reverse=True)
         return UC
-
     def Add_rand_num():
         ## Add a random number in front of poker cards for sorting (It's like card-shuffling)
         ## With card's form like [random, (suit, value)] ex: [0.2134534, (1,13)], [0.98979133,(4,9)]
         global poker_cards
         return sorted([[random(), card] for card in poker_cards])
-    
     def Num_of_fill_cards():
         global poker_cards, player_number
         return 2*player_number+5 - (52-len(poker_cards))
-
     player_HC = Initialize_HC()
     board = Initialize_board()
     poker_cards = Build_cards()
@@ -121,7 +115,6 @@ def Player_all_cards(stage = 'River'):
     return player_AC
 
 def Player_all_cards2(player_AC):
-    
     def Cards_to_list(cards):
     # Return a sorted list of cards
         list_cards = [list(i) for i in zip(*cards)]
@@ -139,7 +132,7 @@ def Player_hands(player_AC2):
     return player_hands
 
 def Poker_hands(AC2):
-    # Return the hands in the form like: hand = [ [hand's type, 5 hand's card values] ]
+    # Return the hands in the form like: hands = [ [hands type, 5 card values] ]
     # Algorithm:
     # <flush test> --->          flush                 /         no flush 
     #              --->     <straight test>            /     <straight test>       
@@ -148,7 +141,6 @@ def Poker_hands(AC2):
     #              --->                                /             / 1: Hightcard/ 2: One pair/ 3: Two pairs/
     #                                                                  4: Trips/ 7: Full house/ 8: Quads
     # AC2 = [[2,1,2,3,3,2,2], [10, 13, 11, 11, 10, 1, 13]] ---> [[suits], [values]]
-    
     ##------------------------------ <Flush Test> ---------------------------------
     p_cards = Flush_test(AC2)
     # For straight test and no straight test
@@ -157,8 +149,8 @@ def Poker_hands(AC2):
     len_values_set = len(set(p_values))
     ##--------------------------- <No Straight Test> ------------------------------
     if len_values_set < 5:        
-        hand = No_straight_hand(p_values)
-        return hand
+        hands = No_straight_hand(p_values)
+        return hands
     ##----------------------------- <Straight Test> -------------------------------
     elif len_values_set >= 5:
         Is_straight = Straight_hand(p_values, p_flush, len_values_set)
@@ -169,18 +161,18 @@ def Poker_hands(AC2):
         else:
             ##------------------------- <No Straight Test> ----------------------------
             if p_flush == 0:
-                hand = No_straight_hand(p_values)
-                return hand
+                hands = No_straight_hand(p_values)
+                return hands
             # Flush(6): Not a straight but has more than 5 same suit cards
             elif p_flush == 6:
                 values_set = sorted(list(set(p_values)), reverse=True)
                 t = []
-                hand = [t]
+                hands = [t]
                 t.append(6)
                 for i in range(5):
                     t.append(values_set[i])
                 # hand = [ [hand's type, values_set[i] for i in range(5)] ]
-                return hand
+                return hands
 
 def Flush_test(AC2):
 # AC2 = [[2,1,2,3,3,2,2], [10, 13, 11, 11, 10, 1, 13]] ---> [[suits], [values]]
@@ -206,7 +198,7 @@ def No_straight_hand(p_values):
     sorted_v = sorted(p_values, reverse=True)
     value_count = Counter(sorted_v).most_common()
     t = []
-    hand = [t]
+    hands = [t]
     ## One pair(2)     
     if value_count[0][1] == 2 and value_count[1][1] == 1:
         t.append(2)
@@ -214,7 +206,7 @@ def No_straight_hand(p_values):
             t.append(value_count[0][0])
         for i in range(1,4):
             t.append(value_count[i][0])
-        return hand
+        return hands
     ## Two pair(3)
     elif value_count[0][1] == 2 and value_count[1][1] == 2:
         t.append(3)
@@ -224,20 +216,20 @@ def No_straight_hand(p_values):
             t.append(value_count[1][0])
         if value_count[2][1] == 1:
             t.append(value_count[2][0])
-            return hand
+            return hands
         elif value_count[2][1] == 2:
             if value_count[2][0] < value_count[3][0]:
                 t.append(value_count[3][0])
-                return hand
+                return hands
             elif value_count[2][0] > value_count[3][0]:
                 t.append(value_count[2][0])
-                return hand
+                return hands
     ## High Card(1)
     elif value_count[0][1] == 1:
         t.append(1)
         for i in range(5):
             t.append(value_count[i][0])
-        return hand
+        return hands
     ## Trips(4)   
     elif value_count[0][1] == 3 and value_count[1][1] == 1:
         t.append(4)
@@ -245,7 +237,7 @@ def No_straight_hand(p_values):
             t.append(value_count[0][0])
         for i in range(1,3):
             t.append(value_count[i][0])
-        return hand
+        return hands
     ## Full house(7)   
     elif value_count[0][1] == 3 and value_count[1][1] >= 2:
         t.append(7)
@@ -253,7 +245,7 @@ def No_straight_hand(p_values):
             t.append(value_count[0][0])
         for i in range(2):
             t.append(value_count[1][0])
-        return hand
+        return hands
     ## Quads(8)   
     elif value_count[0][1] == 4:
         t.append(8)
@@ -262,21 +254,21 @@ def No_straight_hand(p_values):
         if len(value_count) > 2:
             if value_count[1][0] < value_count[2][0]:
                 t.append(value_count[2][0])
-                return hand
+                return hands
             elif value_count[1][0] > value_count[2][0]:
                 t.append(value_count[1][0])
-                return hand
+                return hands
         elif len(value_count) == 2:
             t.append(value_count[1][0])
-            return hand
+            return hands
 
 def Straight_hand(p_values, p_flush, len_values_set):
     # Return the biggest straight if there exists straight hands in the 5~7 cards
     # Otherwise, return False
-    # hand = [ [t, the biggest straight] ] in the 5~7 cards　※t is hand type
+    # hands = [ [t, the biggest straight] ] in the 5~7 cards　※t is hands type
     values_set = sorted(list(set(p_values)), reverse=True)
     t = []
-    hand = [t]
+    hands = [t]
     ## Straight(5), Straight flush(9), or Royal flush(10)
     for i in range(0, len_values_set-4):
         if values_set[i]-4 == values_set[i+4]:
@@ -289,8 +281,8 @@ def Straight_hand(p_values, p_flush, len_values_set):
                     t.append(10) ## Royal flush(10)
             for j in range(5):
                 t.append(values_set[i+j])
-            #hand = [ [t] ] = [ [hand's type, 5 hand's card values] ]
-            return hand
+            # hands = [ [t] ] = [ [hands type, 5 card values] ]
+            return hands
     ## [5,4,3,2,A] Straight(5) or Straight flush(9)
     if values_set[0] == 13 and values_set[-1] == 1 and values_set[-4] == 4:
         if p_flush == 0:
@@ -300,17 +292,11 @@ def Straight_hand(p_values, p_flush, len_values_set):
         for i in range(4, 0, -1):
             t.append(i)
         t.append(13)
-        # hand = [ [hand's type, 4, 3, 2, 1, 13] ]
-        return hand
+        # hand = [ [hands type, 4, 3, 2, 1, 13] ]
+        return hands
     ## No straight!
     else:
         return False            
-            
-            
-def Print_shuffled_cards():
-    # Print the shuffled deck of poker cards
-    for order, card in enumerate(shuffled_cards, 1):
-        print('{0:>2d}: {1:s}{2:s}'.format(order, dict_suit[card[1][0]], dict_value[card[1][1]]))
     
 def Plot_shuffled_cards():
     # Plot the shuffled deck of poker cards
@@ -325,16 +311,65 @@ def Plot_shuffled_cards():
             plt.plot(order, card[1][1], 'go')
         elif card[1][0] == 4:
             plt.plot(order, card[1][1], 'bo')
-            
+
+def Print_shuffled_cards():
+    # Print the shuffled deck of poker cards
+    for order, card in enumerate(shuffled_cards, 1):
+        print('{0:>2d}: {1:s}'.format(order, Dict_card(card[1])))
+        
 def Print_hole_cards_combinations():
     import itertools
     global poker_cards
     hole_cards = sorted(itertools.combinations(poker_cards, 2), reverse=True)
-    for order, card in enumerate(hole_cards, 1):
-            print('{0:4d}: {1:s}{2:s} {3:s}{4:s}'.format(order,
-                   dict_suit[card[0][0]], dict_value[card[0][1]],
-                   dict_suit[card[1][0]], dict_value[card[1][1]]))
+    for order, cards in enumerate(hole_cards, 1):
+            print('{0:4d}: {1:s} {2:s}'.format(order, Dict_card(cards[0]), Dict_card(cards[1])))
             
+def Dict_card(card):
+    try:
+        if len(card) == 2:
+            if card[0] in dict_suit.keys() and card[1] in dict_value.keys():
+                return dict_suit[card[0]]+dict_value[card[1]]
+        else:
+            print('Should be integer tuple (i, j) with ranges i = 1-4 and j = 1-13.')
+    except:
+        print('Should be integer tuple (i, j) with ranges i = 1-4 and j = 1-13.')
+
+def Sort_HC(HC):
+    if HC[0][0] < HC[1][0]:
+        HC[0], HC[1] = HC[1], HC[0]
+    elif HC[0][0] == HC[1][0]:
+        if HC[0][1] < HC[1][1]:
+            HC[0], HC[1] = HC[1], HC[0]
+    return HC
+
+def Rank_player_hands(player_hands):
+    # Rank each player's hands by adding order number. 1 means the biggest hands, 2 is the second one,...etc.
+    sorted_hands = sorted(player_hands.items(), key = lambda i: i[1], reverse=True)
+    # RK: list of ranked keys
+    RK = [i[0] for i in sorted_hands]
+    player_hands[RK[0]].append(1)
+    prev_hands = player_hands[RK[0]][0]
+    prev_rank = player_hands[RK[0]][1]
+    for i in range(1, len(RK)):
+        curr_hands = player_hands[RK[i]][0]
+        if curr_hands == prev_hands:
+            player_hands[RK[i]].append(prev_rank)
+        else:
+            player_hands[RK[i]].append(i+1)
+        prev_hands = curr_hands
+        prev_rank = player_hands[RK[i]][1]
+    return player_hands
+    
+'''    for i in range(1, len(a)):
+        prev_hands = player_hands[a[i-1][0]][0]
+        prev_rank = player_hands[a[i-1][0]][-1]
+        curr_hands = player_hands[a[i][0]][0]
+        if prev_hands == curr_hands:
+            player_hands[a[i][0]].append(prev_rank)
+        else:
+            player_hands[a[i][0]].append(i+1)
+    return player_hands'''
+        
 # Card elements
 dict_suit = {4: '♠', 3: '♥', 2: '♦', 1: '♣'}
 dict_value = {13: 'A', 12: 'K', 11: 'Q', 10: 'J', 9: 'T', 8: '9',
