@@ -1,16 +1,17 @@
 from random import random, sample
 from collections import Counter
 
+def Build_deck():
+    # Return a new deck of 52 poker cards
+    # With card's form like (suit, value) ex: (1,13), (4,9), (2, 11)
+    # new_deck: set of 52 poker cards
+    new_deck = set((suit, value) for suit in range(4, 0, -1) for value in range(13, 0, -1))
+    return new_deck
+
 def Initialization():
     global player_HC, board, poker_cards, shuffled_cards, num_fill_cards      
     def Build_cards():
         # Return a deck of poker cards excluding specified cards
-        def Build_deck():
-            # Return a new deck of 52 poker cards
-            # With card's form like (suit, value) ex: (1,13), (4,9), (2, 11)
-            # new_deck: set of 52 poker cards
-            new_deck = set((suit, value) for suit in range(4, 0, -1) for value in range(13, 0, -1))
-            return new_deck
         def Specified_cards():
             global player_HC, board
             # SC: set of specified cards include every player's hole cards and community cards
@@ -132,7 +133,7 @@ def Player_hands(player_AC2):
     return player_hands
 
 def Poker_hands(AC2):
-    # Return the hands in the form like: hands = [ [hands type, 5 card values] ]
+    # Return hands = [ [hands type, 5 card values of hands] ]
     # Algorithm:
     # <flush test> --->          flush                 /         no flush 
     #              --->     <straight test>            /     <straight test>       
@@ -171,7 +172,7 @@ def Poker_hands(AC2):
                 t.append(6)
                 for i in range(5):
                     t.append(values_set[i])
-                # hand = [ [hand's type, values_set[i] for i in range(5)] ]
+                # hands = [ [hands type, values_set[i] for i in range(5)] ]
                 return hands
 
 def Flush_test(AC2):
@@ -193,8 +194,8 @@ def Flush_test(AC2):
     return p_cards
 
 def No_straight_hand(p_values):
-    # Return the biggest hand if no straight is in the 5~7 cards
-    # hand = [ [t, the biggest hand] ] in the 5~7 cards　※t is hand type
+    # Return the biggest hands if no straight is in the 5~7 cards
+    # hands = [ [t, the biggest hands] ] in the 5~7 cards　※t is hands type
     sorted_v = sorted(p_values, reverse=True)
     value_count = Counter(sorted_v).most_common()
     t = []
@@ -292,7 +293,7 @@ def Straight_hand(p_values, p_flush, len_values_set):
         for i in range(4, 0, -1):
             t.append(i)
         t.append(13)
-        # hand = [ [hands type, 4, 3, 2, 1, 13] ]
+        # hands = [ [hands type, 4, 3, 2, 1, 13] ]
         return hands
     ## No straight!
     else:
@@ -317,14 +318,24 @@ def Print_shuffled_cards():
     for order, card in enumerate(shuffled_cards, 1):
         print('{0:>2d}: {1:s}'.format(order, Dict_card(card[1])))
         
-def Print_hole_cards_combinations():
+def Print_hole_cards_combinations(choice = ' '):
+    # Return the all hole cards combinations
     import itertools
-    global poker_cards
-    hole_cards = sorted(itertools.combinations(poker_cards, 2), reverse=True)
-    for order, cards in enumerate(hole_cards, 1):
-            print('{0:4d}: {1:s} {2:s}'.format(order, Dict_card(cards[0]), Dict_card(cards[1])))
+    deck_cards = sorted(Build_deck(), reverse = True)
+    hole_cards = sorted(itertools.combinations(deck_cards, 2), reverse=True)
+    Str_HC = [ Dict_HC(HC) for HC in hole_cards ]
+    if choice == 'return':
+        return Str_HC
+    elif choice == 'write':
+        with open('hole_cards_combinations', 'wt') as fout:
+            for order, HC in enumerate(Str_HC, 1):
+                print('{0:4d},{1:s}'.format(order, HC), file=fout, sep='')
+    else:
+        for order, HC in enumerate(Str_HC, 1):
+            print('{0:4d}: {1:s}'.format(order, HC))
             
 def Dict_card(card):
+    # Return the text form of card. Ex: '♦A','♣A','♠K', and '♥K' are (2,13),(1,13),(4,12), and (3,12)
     try:
         if len(card) == 2:
             if card[0] in dict_suit.keys() and card[1] in dict_value.keys():
@@ -333,7 +344,18 @@ def Dict_card(card):
             print('Should be integer tuple (i, j) with ranges i = 1-4 and j = 1-13.')
     except:
         print('Should be integer tuple (i, j) with ranges i = 1-4 and j = 1-13.')
-
+        
+def Dict_HC(hole_cards):
+    # Return the text form of hole cards. Ex: '♦A ♣A' means [(2,13),(1,13)]; '♠K ♥K' means [(4,12),(3,12)]
+    try:
+        if len(hole_cards) == 2:
+            return Dict_card(hole_cards[0])+' '+Dict_card(hole_cards[1])
+        else: 
+            print('Should be two cards with the form like [(i, j),(k, l)].')
+    except:
+        print('Should be two cards with the form like [(i, j),(k, l)].')
+        
+        
 def Sort_HC(HC):
     if HC[0][0] < HC[1][0]:
         HC[0], HC[1] = HC[1], HC[0]
@@ -358,17 +380,14 @@ def Rank_player_hands(player_hands):
             player_hands[RK[i]].append(i+1)
         prev_hands = curr_hands
         prev_rank = player_hands[RK[i]][1]
-    return player_hands
+    # The single winner ranks 0
+    # In the case of two or more than two winners, they are all ranked 1
+    if len(player_hands) >= 2:
+        if player_hands[RK[1]][1] == 2:
+            player_hands[RK[0]][1] = 0
+    else:
+        player_hands[RK[0]][1] = 0
     
-'''    for i in range(1, len(a)):
-        prev_hands = player_hands[a[i-1][0]][0]
-        prev_rank = player_hands[a[i-1][0]][-1]
-        curr_hands = player_hands[a[i][0]][0]
-        if prev_hands == curr_hands:
-            player_hands[a[i][0]].append(prev_rank)
-        else:
-            player_hands[a[i][0]].append(i+1)
-    return player_hands'''
         
 # Card elements
 dict_suit = {4: '♠', 3: '♥', 2: '♦', 1: '♣'}
