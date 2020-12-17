@@ -1,21 +1,12 @@
 import No_Limit_Holdem_Poker as HP
 
-def Run_new_game():
-    HP.Shuffle_cards()
-    HP.Fill_cards()
-
-def Get_Poker_hands(stage='River'):
-    player_AC = HP.Player_all_cards(stage)
-    player_AC2 = HP.Player_all_cards2(player_AC)
-    return HP.Player_hands(player_AC2)
-
 class SD():
-    # Class for statistical data(SD)
-    def __init__(self, ip_name, ip_count, ip_win_count, ip_draw_count):
+    # Class for statistical data(SD): count, win-count, tie-count, win-rate, tie-rate, W/L ratio
+    def __init__(self, ip_name, ip_count, ip_win_count, ip_tie_count):
         self.__name = ip_name
         self.__count = ip_count
         self.__win_count = ip_win_count
-        self.__draw_count = ip_draw_count
+        self.__tie_count = ip_tie_count
     @property
     def name(self):
         return self.__name
@@ -26,8 +17,8 @@ class SD():
     def win_count(self):
         return self.__win_count
     @property
-    def draw_count(self):
-        return self.__draw_count
+    def tie_count(self):
+        return self.__tie_count
     @property
     def win_rate(self):
         if self.__count >= 1:
@@ -36,41 +27,38 @@ class SD():
         else:
             return 0
     @property
-    def draw_rate(self):
+    def tie_rate(self):
         if self.__count >= 1:
-            draw_rate = self.__draw_count/self.__count
-            return draw_rate
+            tie_rate = self.__tie_count/self.__count
+            return tie_rate
         else:
             return 0
     @property
     def wl_ratio(self):
-        loss_count = self.__count - self.__win_count - self.__draw_count
+        loss_count = self.__count - self.__win_count - self.__tie_count
         if loss_count >= 1:
             wl_ratio = self.__win_count/loss_count
             return wl_ratio
         else:
             return 0
-    @name.setter
-    def name(self, ip_name):
-        self.__name = ip_name
     @count.setter
     def count(self, ip_count):
         self.__count = ip_count
     @win_count.setter
     def win_count(self, ip_win_count):
         self.__win_count= ip_win_count
-    @draw_count.setter
-    def draw_count(self, ip_draw_count):
-        self.__draw_count = ip_draw_count
+    @tie_count.setter
+    def tie_count(self, ip_tie_count):
+        self.__tie_count = ip_tie_count
         
-def Build_all_HC_statistical_data():
-    # Return the dictionary of all 1326 hole cards(HC) with each of its statistical data class
+def Build_HC_statistical_data():
+    # Return the dictionary of all 1326 hole cards(HC) with each of its statistical data class(SD)
     list_HC_name = HP.Print_hole_cards_combinations('return')
     statistical_data_HC = {v: SD(v, 0, 0, 0) for v in list_HC_name}
     return statistical_data_HC
 
 def Build_SHC_statistical_data():
-    # Return the dictionary of specified hole cards(SHC) with each of its statistical data class
+    # Return the dictionary of specified hole cards(SHC) with each of its SD
     player_HC_ori = HP.Initialize_HC()
     SHC = [HP.Sort_HC(HC) for HC in player_HC_ori.values() if len(HC) == 2]
     list_SHC_name = [HP.Dict_HC(HC) for HC in SHC]
@@ -78,26 +66,30 @@ def Build_SHC_statistical_data():
     return statistical_data_HC
 
 def SD_HT():
-    # Return the dictionary of all 10 types of hands(HT) with each of its statistical data class
+    # SD_HT: Return the dictionary of all 10 types of hands(HT) with each of its SD
     stadata_HT = {HT_code: SD(HT_name, 0, 0, 0) for HT_code, HT_name in HP.dict_HT.items()}
     return stadata_HT
 
+def Build_HT_statistical_data():
+    # Return the dictionary of SHC with each of its SD_HT
+    global stadata_HC
+    return {HC_name: SD_HT() for HC_name in stadata_HC.keys()}
 
-# Card elements
+# Card elements: 4 suits and 13 values
 HP.dict_suit = {4: '♠', 3: '♥', 2: '♦', 1: '♣'}
 HP.dict_value = {13: 'A', 12: 'K', 11: 'Q', 10: 'J', 9: 'T', 8: '9',
                   7: '8',  6: '7',  5: '6',  4: '5', 3: '4', 2: '3', 1: '2'}
-# Game parameters
-# HC: player hole cards
-# board: public cards at different stages F(flop-3), T(turn-1), R(river-1)
-HP.player_number = 10
+# ----------------------- Game Parameters --------------------------------
+# HC: Hole Cards
+# board: couumnity cards at flop(F), turn(T), and river(R) stages
+HP.player_number = 2
 HP.board_ori = { 
     'F': [],
     'T': [],
     'R': []
 }
 HP.player_HC_ori = {
-    1: [(4, 1), (3,1)], 2: [(2,2), (1,2)], 3: [],
+    1: [(4, 5), (3,5)], 2: [(2, 12), (1, 11)], 3: [],
     4: [],  5: [], 6: [],
     7: [], 8: [], 9: [],
    10: [] 
@@ -105,84 +97,73 @@ HP.player_HC_ori = {
 # Initialize card information
 HP.Initialization()
 # Statistical data class for all 1326 hold cards
-#stadata_HC = Build_hold_cards_statistical_data()
+#stadata_HC = Build_HC_statistical_data()
 # Statistical data class for specified hold cards (refer to HP.player_HC_ori)
 stadata_HC = Build_SHC_statistical_data()
 # Statistical data class of hands types for each specified hold cards
-stadata_HT = {HC_name: SD_HT() for HC_name in stadata_HC.keys()}
+stadata_HT = Build_HT_statistical_data()
 
 #-----------------------------------------------------------------------------------------------------------
 import time
 
 game_count = 1
-
 tic = time.time()
 while True:
-    Run_new_game()
-    player_hands = Get_Poker_hands('River')
+    HP.Run_new_game()
+    player_hands = HP.Get_Poker_hands('River')
     HP.Rank_player_hands(player_hands)
-    # hands = [ [hands type, 5 card values of hands] ]
+    # hands = [ [hands type, 5 card values of hands], hands rank ] 
     for player_code, hands in player_hands.items():
-        code_HT = hands[0][0]
-        if code_HT >=1:
-            sorted_HC = HP.Sort_HC(HP.player_HC[player_code])
-            name_HC = HP.Dict_HC(sorted_HC)
-            if name_HC in stadata_HC.keys():
-                rank = hands[1]
-                if rank == 0:
-                    stadata_HC[name_HC].win_count += 1
-                    stadata_HT[name_HC][code_HT].win_count += 1
-                elif rank == 1:
-                    stadata_HC[name_HC].draw_count += 1
-                    stadata_HT[name_HC][code_HT].draw_count += 1
-                stadata_HC[name_HC].count += 1
-                stadata_HT[name_HC][code_HT].count += 1
-            else:
-                break
-            
-            #break
-            '''cards = HP.Sort_HC(HP.player_HC[player_code])+HP.board['F']+HP.board['T']+HP.board['R']
-            str_cards = '( '
-            for card in cards:
-                str_cards += HP.dict_suit[card[0]] + HP.dict_value[card[1]] + ' '
-            str_cards += ')'
-            content = '{0: >8d}.{1: >4d}: Cards: {2}  Player: {3}, Hands: {4}'
-            print(content.format(game_count, rep, str_cards, player_code, hands))
-            rep += 1
-            break'''
-    
-    if game_count >= 100000:
+        sorted_HC = HP.Sort_HC(HP.player_HC[player_code])
+        name_HC = HP.Dict_HC(sorted_HC)
+        if name_HC in stadata_HC.keys():
+            rank = hands[1]
+            code_HT = hands[0][0]
+            if rank == 0:
+                stadata_HC[name_HC].win_count += 1
+                stadata_HT[name_HC][code_HT].win_count += 1
+            elif rank == 1:
+                stadata_HC[name_HC].tie_count += 1
+                stadata_HT[name_HC][code_HT].tie_count += 1
+            stadata_HC[name_HC].count += 1
+            stadata_HT[name_HC][code_HT].count += 1
+        else:
+            break
+    if game_count >= 10000:
         toc = time.time()
         print('Running time: {} seconds'.format(round(toc-tic, 3)), end='\n'*3)
-        break
-        
+        break   
     game_count += 1
 
-
-# Hole Cards | Win Rate | Draw Rate | W/L Ratio |Count
+# Print statistical data of specified hole cards
+# Hole Cards | Win | Tie | Win/Loss | Count
 c1 = 'Hole Cards'
-c2 = 'Win Rate'
-c3 = 'Draw Rate'
-c4 = 'W/L Ratio'
+c2 = 'Win'
+c3 = 'Tie'
+c4 = 'Win/Loss'
 c5 = 'Count'
 print('{0}-player game simulation times: {1}'.format(HP.player_number, game_count), end='\n'*2)
 f = ' '.join([HP.Dict_card(card) for card in HP.board_ori['F']])
 t = ' '.join([HP.Dict_card(card) for card in HP.board_ori['T']])
 r = ' '.join([HP.Dict_card(card) for card in HP.board_ori['R']])
+print('{0:-^43}'.format('-'))
 print('{0: ^16} | {1: ^8} | {2: ^4} | {3: ^5}'.format('Specified Cards:', 'FLOP', 'TURN', 'RIVER'))
 print('{0: ^16} | {1: ^8} | {2: ^4} | {3: ^5}'.format(' ', f, t, r), end='\n'*2)
-print('Result:', end='\n'*2)
+print('Result:')
+print('{0:-^56}'.format('-'))
 print('{0: ^10s} | {1: ^8s} | {2: ^9s} | {3: ^9s} | {4: ^8s}'.format(c1, c2, c3, c4, c5))
-print('{0:-^55}'.format('-'))
+print('{0:-^56}'.format('-'))
 for HC_name, data in stadata_HC.items():
     print('{0: ^10s} | {1: ^8.2%} | {2: ^9.2%} | {3: ^9.3} | {4: ^8}'.format(
-    data.name, data.win_rate, data.draw_rate, data.wl_ratio, data.count))
+    data.name, data.win_rate, data.tie_rate, data.wl_ratio, data.count))
+
 
 
 #-----------------------------------------------------------------------------------------------------------
 from matplotlib import pyplot as plt
 plt.style.use('dark_background')
 
+# Print statistical data of each hands type for specified hole cards
 c6 = HP.dict_HT[1]
 c7 = HP.dict_HT[2]
 c8 = HP.dict_HT[3]
@@ -196,41 +177,41 @@ c15 = HP.dict_HT[10]
 Str_col = '{0: >10} | {1: ^9} | {2: ^6} | \
 {3: ^8} | {4: ^6} | {5: ^8} | {6: ^7} | \
 {7: ^10} | {8: ^7} | {9: ^14} | {10: ^11}'
-print(Str_col.format(c1, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15))
-print('{0:-^126}'.format('-'))
-
 Str_col2 = '{0: >10} | {1: ^9.1%} | {2: ^6.1%} | \
 {3: ^8.1%} | {4: ^6.1%} | {5: ^8.1%} | {6: ^7.1%} | \
 {7: ^10.1%} | {8: ^7.1%} | {9: ^14.1%} | {10: ^11.1%}'
 for HC_name, HT_data in stadata_HT.items():
-    # a: Appearance rate of each of Hands types 
-    # w: Win rate of...
-    # d: Draw rate of...
-    a = [stadata_HT[HC_name][HT_code].count/ stadata_HC[HC_name].count 
+    print(Str_col.format(c1, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15))
+    # O: Occurrence persentage of each of Hands types 
+    # W: Win percentage of...
+    # T: Tie percentage of...
+    o = [stadata_HT[HC_name][HT_code].count/ stadata_HC[HC_name].count 
          if stadata_HC[HC_name].count > 0 else 0 for HT_code in HP.dict_HT.keys()]
     w = [stadata_HT[HC_name][HT_code].win_rate for HT_code in HP.dict_HT.keys()]
-    d = [stadata_HT[HC_name][HT_code].draw_rate for HT_code in HP.dict_HT.keys()]
-    print(Str_col2.format('| a',a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7],a[8],a[9]))
-    print(Str_col2.format(HC_name+' | w',w[0],w[1],w[2],w[3],w[4],w[5],w[6],w[7],w[8],w[9]))
-    print(Str_col2.format('| d',d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9]))
+    t = [stadata_HT[HC_name][HT_code].tie_rate for HT_code in HP.dict_HT.keys()]
+    print('{0:-^126}'.format('-'))
+    print(Str_col2.format('| O',o[0],o[1],o[2],o[3],o[4],o[5],o[6],o[7],o[8],o[9]))
+    print(Str_col2.format(HC_name+' | W',w[0],w[1],w[2],w[3],w[4],w[5],w[6],w[7],w[8],w[9]))
+    print(Str_col2.format('| T',t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8],t[9]))
     print('{0:-^126}'.format('-'))
     
+    # Data visualization of hands type distribution
     size = 5
     fig, ax = plt.subplots(figsize=(size*1.618, size))
     x = [name for name in HP.dict_HT.keys()]
-    y_a = [i*100 for i in a]
+    y_o = [i*100 for i in o]
     y_w = [i*100 for i in w]
-    y_d = [i*100 for i in d]
-    ax.plot(x, y_a, 'g-', linewidth=size/4)
-    ax.plot(x, y_w, 'r-', linewidth=size/4)
-    ax.plot(x, y_d, 'y-', linewidth=size/4)
-    plt.xticks(fontsize= size*2.5)
-    plt.yticks(fontsize= size*2.5)
-    plt.title('Hands Type Distribution', fontsize=size*4)
-    plt.xlabel('Hands type code', fontsize=size*3)
-    plt.ylabel('(%)', fontsize=size*3)
-    plt.legend(['Appearance Rate', 'Win Rate', 'Draw Rate'], 
-               fontsize=size*2.5, bbox_to_anchor=(1.02, 0.6), loc='upper left')
+    y_t = [i*100 for i in t]
+    ax.plot(x, y_o, 'g-', linewidth=size/3)
+    ax.plot(x, y_w, 'r-', linewidth=size/3)
+    ax.plot(x, y_t, 'y-', linewidth=size/3)
+    plt.xticks(fontsize= size*3)
+    plt.yticks(fontsize= size*3)
+    plt.title('Hands Type Distribution', fontsize=size*4.5)
+    plt.xlabel('Hands Type Code', fontsize=size*3.5)
+    plt.ylabel('Percentage(%)', fontsize=size*3.5)
+    plt.legend(['Occurrence', 'Win', 'Tie'], 
+               fontsize=size*3, bbox_to_anchor=(1.02, 0.6), loc='upper left')
     plt.grid(b=True, which='major', color='#666666', linestyle='-')
     plt.axis([1, 10, 0, 100])
     plt.show()
