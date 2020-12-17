@@ -370,6 +370,15 @@ def Sort_HC(HC):
             HC[0], HC[1] = HC[1], HC[0]
     return HC
 
+def Run_new_game():
+    Shuffle_cards()
+    Fill_cards()
+
+def Get_Poker_hands(stage='River'):
+    player_AC = Player_all_cards(stage)
+    player_AC2 = Player_all_cards2(player_AC)
+    return Player_hands(player_AC2)
+
 def Rank_player_hands(player_hands):
     # Rank each player's hands by adding order number. 1 means the biggest hands, 2 is the second one,...etc.
     sorted_hands = sorted(player_hands.items(), key = lambda i: i[1], reverse=True)
@@ -394,8 +403,7 @@ def Rank_player_hands(player_hands):
     else:
         player_hands[RK[0]][1] = 0
     
-        
-# Card elements
+# Card elements: 4 suits and 13 values
 dict_suit = {4: '♠', 3: '♥', 2: '♦', 1: '♣'}
 dict_value = {13: 'A', 12: 'K', 11: 'Q', 10: 'J', 9: 'T', 8: '9',
                7: '8',  6: '7',  5: '6',  4: '5', 3: '4', 2: '3', 1: '2'}
@@ -412,12 +420,12 @@ dict_HT = {
     9: 'Straight Flush',
    10: 'Royal Flush'
 }
-# Game parameters
-# HC: player hole cards
-# board: public cards at different stages F(flop-3), T(turn-1), R(river-1)
+# ----------------------- Game Parameters --------------------------------
+# HC: Hole Cards
+# board: couumnity cards at flop(F), turn(T), and river(R) stages
 player_number = 10
 board_ori = {'F': [], 'T': [], 'R': [] }
-player_HC_ori = { 1: [], 2: [], 3: [], 4: [], 5: [],
+player_HC_ori = { 1: [], 2: [], 3: [], 4: [], 5: [], 
                   6: [], 7: [], 8: [], 9: [], 10: [] }
 # Initialize card information
 Initialization()
