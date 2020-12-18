@@ -9,7 +9,7 @@ def Build_deck():
     return new_deck
 
 def Initialization():
-    global player_HC, board, poker_cards, shuffled_cards, num_fill_cards      
+    global player_HC, board, poker_cards, shuffled_cards, num_fill_cards    
     def Build_cards():
         # Return a deck of poker cards excluding specified cards
         def Specified_cards():
@@ -34,10 +34,12 @@ def Initialization():
         ## Add a random number in front of poker cards for sorting (It's like card-shuffling)
         ## With card's form like [random, (suit, value)] ex: [0.2134534, (1,13)], [0.98979133,(4,9)]
         global poker_cards
-        return sorted([[random(), card] for card in poker_cards])
+        sorted_cards = sorted([[random(), card] for card in poker_cards])
+        return sorted_cards
     def Num_of_fill_cards():
-        global poker_cards, player_number
-        return 2*player_number+5 - (52-len(poker_cards))
+        global poker_cards, num_players
+        num = 2*num_players+5 - (52-len(poker_cards))
+        return num
     player_HC = Initialize_HC()
     board = Initialize_board()
     poker_cards = Build_cards()
@@ -46,9 +48,9 @@ def Initialization():
 
 def Initialize_HC():
     # Initialize the dictionary of player hold cards to the original one
-    global player_number, player_HC_ori
-    HC = { k: [] for k in range(1, player_number+1) }
-    for k in range(1, player_number+1):
+    global num_players, player_HC_ori
+    HC = { k: [] for k in range(1, num_players+1) }
+    for k in range(1, num_players+1):
         if player_HC_ori[k]:
             for v in player_HC_ori[k]:
                 HC[k].append(v)
@@ -56,11 +58,26 @@ def Initialize_HC():
 
 def Initialize_board():
     # Initialize the dictionary of board to the original one
-    global board_ori
+    global board_ori, observing_stage
     Bd = {}
-    for k, v in board_ori.items():
-        Bd[k] = v.copy()
-    return Bd    
+    if observing_stage.lower() in {'r', 'river'}:
+        for k, v in board_ori.items():
+            Bd[k] = v.copy()
+    elif observing_stage.lower() in {'p', 'preflop'}:
+        for k in board_ori.keys():
+            Bd[k] = []
+    elif observing_stage.lower() in {'f', 'flop'}:
+        Bd['F'] = board_ori['F'].copy()
+        Bd['T'] = []
+        Bd['R'] = []
+    elif observing_stage.lower() in {'t', 'turn'}:
+        Bd['F'] = board_ori['F'].copy()
+        Bd['T'] = board_ori['T'].copy()
+        Bd['R'] = []
+    else:
+        for k, v in board_ori.items():
+            Bd[k] = v.copy()
+    return Bd
     
 def Shuffle_cards():
     global shuffled_cards
@@ -95,7 +112,7 @@ def Fill_cards():
                     board[k].append(UC[fill_count])
                     fill_count += 1
     
-def Player_all_cards(stage = 'River'):
+def Player_all_cards(stage = 'river'):
     # Return each player's all cards (hole cards + community cards)
     global player_HC
     # All Cards(AC) = [(2,10),(1,13),(2,11),(3,11),(3,10),(2,1),(2,13)] ---> [(suit, value)]
@@ -103,13 +120,13 @@ def Player_all_cards(stage = 'River'):
     for k, v in player_HC.items():
         player_AC[k] = v.copy()
     try:
-        if stage == 'River':
+        if stage == 'river':
             for i in player_AC:
                 player_AC[i] += board['F']+board['T']+board['R']
-        elif stage == 'Turn':
+        elif stage == 'turn':
             for i in player_AC:
                 player_AC[i] += board['F']+board['T']
-        elif stage == 'Flop':
+        elif stage == 'flop':
             for i in player_AC:
                 player_AC[i] += board['F']
     except:
@@ -130,12 +147,12 @@ def Player_all_cards2(player_AC):
     return player_AC2
 
 def Player_hands(player_AC2):
-    # Return each player's hands
+    # Return each player's biggest hands
     player_hands = {k: Poker_hands(v) for k, v in player_AC2.items()}
     return player_hands
 
 def Poker_hands(AC2):
-    # Return hands = [ [hands type, 5 card values of hands] ]
+    # Return the biggest hands = [ [hands type, 5 card values of the biggest hands] ]
     # AC2 = [[2,1,2,3,3,2,2], [10, 13, 11, 11, 10, 1, 13]] ---> [[suits], [values]]
     # Algorithm:
     # <flush test> --->          flush                 /         no flush 
@@ -370,11 +387,11 @@ def Sort_HC(HC):
             HC[0], HC[1] = HC[1], HC[0]
     return HC
 
-def Run_new_game():
+def Run_New_Game():
     Shuffle_cards()
     Fill_cards()
 
-def Get_Poker_hands(stage='River'):
+def Get_Poker_Hands(stage='river'):
     player_AC = Player_all_cards(stage)
     player_AC2 = Player_all_cards2(player_AC)
     return Player_hands(player_AC2)
@@ -421,11 +438,22 @@ dict_HT = {
    10: 'Royal Flush'
 }
 # ----------------------- Game Parameters --------------------------------
+# Number of players: 1~10
+num_players = 10
+# Observing stage: 'preflop', 'flop', 'turn', and 'river'
+observing_stage = 'preflop'
+# Board: couumnity cards at flop(F), turn(T), and river(R) stages
+board_ori = { 
+    'F': [      ],
+    'T': [      ],
+    'R': [      ]
+}
 # HC: Hole Cards
-# board: couumnity cards at flop(F), turn(T), and river(R) stages
-player_number = 10
-board_ori = {'F': [], 'T': [], 'R': [] }
-player_HC_ori = { 1: [], 2: [], 3: [], 4: [], 5: [], 
-                  6: [], 7: [], 8: [], 9: [], 10: [] }
+player_HC_ori = {
+    1: [      ], 2: [      ], 3: [      ],
+    4: [      ], 5: [      ], 6: [      ],
+    7: [      ], 8: [      ], 9: [      ],
+   10: [      ] 
+}
 # Initialize card information
 Initialization()
