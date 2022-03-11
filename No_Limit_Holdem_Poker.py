@@ -1,12 +1,12 @@
 from random import random, sample
 from collections import Counter
 
+
 def Build_deck():
     # Return a new deck of 52 poker cards
     # With card's form like (suit, value) ex: (1,13), (4,9), (2, 11)
-    # new_deck: set of 52 poker cards
-    new_deck = set((suit, value) for suit in range(4, 0, -1) for value in range(13, 0, -1))
-    return new_deck
+    # Return a set of 52 poker cards
+    return set((suit, value) for suit in range(4, 0, -1) for value in range(13, 0, -1))
 
 def Initialization():
     global player_HC, board, poker_cards, shuffled_cards, num_fill_cards    
@@ -17,19 +17,18 @@ def Initialization():
             # SC: set of specified cards include every player's hole cards and community cards
             SC = set()
             for k, v in player_HC.items():
-                if v != False:
+                if v:
                     for i in v:
                         SC.add(i)
             for k, v in board.items():
-                if v != False:
+                if v:
                     for i in v:
                         SC.add(i)
             return SC 
         set_52_cards = Build_deck()
         set_specified_cards = Specified_cards()
-        # UC: a deck of unspecified cards
-        UC = sorted(list(set_52_cards-set_specified_cards), reverse=True)
-        return UC
+        # Return a deck of unspecified cards
+        return sorted(list(set_52_cards-set_specified_cards), reverse=True)
     def Add_rand_num():
         ## Add a random number in front of poker cards for sorting (It's like card-shuffling)
         ## With card's form like [random, (suit, value)] ex: [0.2134534, (1,13)], [0.98979133,(4,9)]
@@ -159,7 +158,7 @@ def Poker_hands(AC2):
     #              --->     <straight test>            /     <straight test>       
     #              --->   9: straight flush/ 6: flush  /  5: straight/ no straight
     #              --->  10: Royal flush               /             / <no straight test>
-    #              --->                                /             / 1: Hightcard/ 2: One pair/ 3: Two pairs/
+    #              --->                                /             / 1: High card/ 2: One pair/ 3: Two pairs/
     #                                                                  4: Trips/ 7: Full house/ 8: Quads
     # 
     ##------------------------------ <Flush Test> ---------------------------------
@@ -175,7 +174,7 @@ def Poker_hands(AC2):
     ##----------------------------- <Straight Test> -------------------------------
     elif len_values_set >= 5:
         Is_straight = Straight_hand(p_values, p_flush, len_values_set)
-        # Straight, Straight Fluse, or Royal Flush
+        # Straight, Straight Flush, or Royal Flush
         if Is_straight:
             return Is_straight
         # No Straight
@@ -197,7 +196,7 @@ def Poker_hands(AC2):
 
 def Flush_test(AC2):
 # AC2 = [[2,1,2,3,3,2,2], [10, 13, 11, 11, 10, 1, 13]] ---> [[suits], [values]]
-# p_cards = [ [Flush card's values], 6 ] if thre is a flush in the 5-7 cards
+# p_cards = [ [Flush card's values], 6 ] if there is a flush in the 5-7 cards
 #           [ [Original card's values], 0 ] if no flush is in the 5-7 cards
     p_cards = [ [] ]
     suit_count = Counter(AC2[0]).most_common(1)
@@ -442,7 +441,7 @@ dict_HT = {
 num_players = 10
 # Observing stage: 'preflop', 'flop', 'turn', and 'river'
 observing_stage = 'preflop'
-# Board: couumnity cards at flop(F), turn(T), and river(R) stages
+# Board: community cards at flop(F), turn(T), and river(R) stages
 board_ori = { 
     'F': [      ],
     'T': [      ],
@@ -450,9 +449,15 @@ board_ori = {
 }
 # HC: Hole Cards
 player_HC_ori = {
-    1: [      ], 2: [      ], 3: [      ],
-    4: [      ], 5: [      ], 6: [      ],
-    7: [      ], 8: [      ], 9: [      ],
+    1: [      ],
+    2: [      ],
+    3: [      ],
+    4: [      ],
+    5: [      ],
+    6: [      ],
+    7: [      ],
+    8: [      ],
+    9: [      ],
    10: [      ] 
 }
 # Initialize card information
