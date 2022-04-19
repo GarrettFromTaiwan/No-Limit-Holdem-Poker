@@ -1,3 +1,6 @@
+from poker_odds_calculator import No_Limit_Holdem_Poker as HP
+import time
+
 class SD():
     # Class for statistical data(SD): count, win-count, tie-count, win-rate, tie-rate, Loss/Win ratio
     def __init__(self, ip_name, ip_count, ip_win_count, ip_tie_count):
@@ -82,9 +85,20 @@ def Build_HT_statistical_data():
     stadata_HT_HC = {HC_name: SD_HT() for HC_name in stadata_HC.keys()}
     return stadata_HT_HC
 
-def Game_simulation(stage = 'f'):
+def Shift_card_value(card_dict):
+    # Value Shift: 1->13, 13->12, 12->11, ..., 3->2, 2->1 for data processing
+    for k, v in card_dict.items():
+        for i in range(len(v)):
+            if v[i]:
+                tem = list(card_dict[k][i])
+                tem[1] -= 1
+                if tem[1] == 0:
+                    tem[1] = 13
+                card_dict[k][i] = tuple(tem)
+    return card_dict
+
+def Game_simulation(stage = 'r'):
     # Simulation Type (1): Specified hole cards in different situations ----------------------------------------------
-    from poker_odds_calculator import No_Limit_Holdem_Poker as HP
     global Num_Player, board, player_HC, stadata_HC
     HP.num_players = Num_Player
     HP.observing_stage = stage
@@ -97,7 +111,6 @@ def Game_simulation(stage = 'f'):
     # Statistical data class of hands types for each specified hold cards
     stadata_HT = Build_HT_statistical_data()
 
-    import time
     game_count = 1
     tic = time.time()
     while True:
@@ -242,22 +255,8 @@ player_HC = {
    10: [      ] 
 }
 # Value Shift: 1->13, 13->12, 12->11, ..., 3->2, 2->1 for data processing
-for k, v in board.items():
-    for i in range(len(v)):
-        if v[i]:
-            tem = list(board[k][i])
-            tem[1] -= 1
-            if tem[1] == 0:
-                tem[1] = 13
-            board[k][i] = tuple(tem)       
-for k, v in player_HC.items():
-    for i in range(len(v)):
-        if v[i]:
-            tem = list(player_HC[k][i])
-            tem[1] -= 1
-            if tem[1] == 0:
-                tem[1] = 13
-            player_HC[k][i] = tuple(tem)
+board = Shift_card_value(board)
+player_HC = Shift_card_value(player_HC)
 # Observing stage: 'preflop(P or p)', 'flop(F or f)', 'turn(T or t)', and 'river(R or r)'
 Game_simulation('p')
 Game_simulation('f')
